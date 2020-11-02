@@ -74,6 +74,29 @@ public class RestUserController {
         user.setRoles(getRoles(userDto.getRoles()));
         return user;
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<UserDto> editUser(@PathVariable(name = "id") long id, @RequestBody UserDto userDto) {
+        if (!userService.userExistById(id)) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        User user = userService.getUserById(id);
+        Set<Role> roles = user.getRoles();
+        userService.updateUser(dtoToEntity(user, userDto));
+        roles.forEach(x -> roleService.deleteRole(x.getId()));
+        userDto.setId(id);
+        return new ResponseEntity<>(userDto, HttpStatus.OK);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<UserDto> deleteUser(@PathVariable(name = "id") long id) {
+        if (!userService.userExistById(id)) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        userService.deleteUser(id);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
     public Set<Role> getRoles(List<String> rolesForUser) {
         Set<Role> roles = new HashSet<>();
         if (rolesForUser.contains("ADMIN")) {
